@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Risk Assessment Results</h2>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-{{ 'danger' if risk >= 20 else 'warning' if risk >= 10 else 'success' }} text-center">
+            <h3 class="alert-heading">10-Year Cardiovascular Disease Risk</h3>
+            <h1 class="display-1">{{ risk }}%</h1>
+            <p class="lead mb-0">
+                {% if risk >= 20 %}
+                    High Risk - Recommend clinical intervention
+                {% elif risk >= 10 %}
+                    Moderate Risk - Recommend lifestyle changes
+                {% else %}
+                    Low Risk - Maintain healthy habits
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Prediction Explanation</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="shap-text-explanation" class="mb-3">
+                            <strong>Summary:</strong> {{ text_explanation }}
+                        </div>
+                        <div id="shap-force-plot">
+                            {{ shap_plot|safe }}
+                        </div>
+                        <p class="mt-3 text-muted">
+                            <small>
+                                Red features increase risk, blue features decrease risk.
+                                Base value: {{ shap_plot.base_value|default('', true) }}
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Global Feature Importance</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="data:image/png;base64,{{ global_shap_img }}" 
+                             alt="Global Feature Importance" 
+                             class="img-fluid">
+                        <p class="mt-3 text-muted">
+                            <small>
+                                Shows which factors most significantly impact predictions
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+            <a href="/" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-arrow-repeat"></i> New Assessment
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

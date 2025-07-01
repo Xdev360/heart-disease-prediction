@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Cardiovascular Risk Assessment</h2>
+    </div>
+    <div class="card-body">
+        <p class="lead">Enter patient information to assess 10-year heart disease risk</p>
+        <form method="POST" action="/predict">
+            <div class="row g-3">
+                <!-- Personal Information -->
+                <div class="col-md-6">
+                    <h4 class="border-bottom pb-2">Personal Information</h4>
+                    <div class="mb-3">
+                        <label class="form-label">Gender</label>
+                        <select class="form-select" name="male" required>
+                            <option value="">Select</option>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Age (Years)</label>
+                        <input type="number" class="form-control" name="age" min="30" max="100" required>
+                    </div>
+                </div>
+                
+                <!-- Lifestyle Factors -->
+                <div class="col-md-6">
+                    <h4 class="border-bottom pb-2">Lifestyle Factors</h4>
+                    <div class="mb-3">
+                        <label class="form-label">Current Smoker</label>
+                        <select class="form-select" name="currentSmoker" required>
+                            <option value="">Select</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cigarettes per Day</label>
+                        <input type="number" class="form-control" name="cigsPerDay" min="0" max="100" value="0" required>
+                    </div>
+                </div>
+                
+                <!-- Medical History -->
+                <div class="col-md-6">
+                    <h4 class="border-bottom pb-2">Medical History</h4>
+                    <div class="mb-3">
+                        <label class="form-label">Blood Pressure Medication</label>
+                        <select class="form-select" name="BPMeds" required>
+                            <option value="">Select</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">History of Stroke</label>
+                        <select class="form-select" name="prevalentStroke" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hypertension</label>
+                        <select class="form-select" name="prevalentHyp" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Diabetes</label>
+                        <select class="form-select" name="diabetes" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Clinical Measurements -->
+                <div class="col-md-6">
+                    <h4 class="border-bottom pb-2">Clinical Measurements</h4>
+                    <div class="mb-3">
+                        <label class="form-label">Total Cholesterol (mg/dL)</label>
+                        <input type="number" class="form-control" name="totChol" min="100" max="500" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Systolic BP (mmHg)</label>
+                        <input type="number" class="form-control" name="sysBP" min="80" max="250" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Diastolic BP (mmHg)</label>
+                        <input type="number" class="form-control" name="diaBP" min="40" max="150" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">BMI (kg/m²)</label>
+                        <input type="number" step="0.1" class="form-control" name="BMI" min="15" max="50" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Heart Rate (bpm)</label>
+                        <input type="number" class="form-control" name="heartRate" min="40" max="150" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Glucose (mg/dL)</label>
+                        <input type="number" class="form-control" name="glucose" min="50" max="400" required>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg mt-4">
+                Assess Cardiovascular Risk
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
