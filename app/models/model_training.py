@@ -9,13 +9,18 @@ def train_and_evaluate_model():
     """Train XGBoost model with hyperparameter tuning"""
     X_train, X_test, y_train, y_test, feature_names = load_and_preprocess_data()
     
+    # Calculate class weights
+    neg, pos = (y_train == 0).sum(), (y_train == 1).sum()
+    scale_pos_weight = neg / pos
+
     # Model with initial parameters
     model = xgb.XGBClassifier(
         objective='binary:logistic', 
         n_estimators=200,
         random_state=42,
         eval_metric='logloss',
-        use_label_encoder=False
+        use_label_encoder=False,
+        scale_pos_weight=scale_pos_weight
     )
     
     # Hyperparameter tuning
