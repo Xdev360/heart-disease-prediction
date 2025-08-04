@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioRisk.ai</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-bg">
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="sidebar-logo-img"></span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('start') }}" class="sidebar-link active"><span class="icon"><img src="{{ url_for('static', filename='img/newprediction.png?v=1') }}" alt="New Prediction" class="nav-icon"></span> New Prediction</a>
+                <a href="#" class="sidebar-link"><span class="icon"><img src="{{ url_for('static', filename='img/search.png?v=1') }}" alt="Search" class="nav-icon"></span> Search For Result</a>
+                <a href="#" class="sidebar-link"><span class="icon"><img src="{{ url_for('static', filename='img/result.png?v=1') }}" alt="Result Library" class="nav-icon"></span> Result Library</a>
+            </nav>
+            <div class="sidebar-history">
+                <div class="history-title">History</div>
+                <div id="history-items">
+                    <!-- History items will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <button class="toggle-mode" title="Toggle light/dark mode"><img src="{{ url_for('static', filename='img/lightmode.png') }}" alt="Light Mode" class="mode-icon"></button>
+            </div>
+        </aside>
+        <main class="dashboard-main">
+            <div class="main-header">
+                <div class="main-header-content">
+                </div>
+            </div>
+            <div class="main-content-center">
+                <div class="main-message">Enter Patients Information to asses<br>heart disease risk</div>
+                <a href="{{ url_for('start') }}" class="btn btn-primary main-btn">Start Now</a>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Load and display prediction history
+        function loadHistory() {
+            fetch('/history')
+                .then(response => response.json())
+                .then(history => {
+                    const historyContainer = document.getElementById('history-items');
+                    historyContainer.innerHTML = '';
+                    
+                    if (history.length === 0) {
+                        historyContainer.innerHTML = '<div class="history-item empty">No predictions yet</div>';
+                        return;
+                    }
+                    
+                    // Display last 5 predictions
+                    const recentHistory = history.slice(-5).reverse();
+                    recentHistory.forEach(item => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        historyItem.innerHTML = `
+                            <div class="history-name">${item.patient_name}</div>
+                            <div class="history-risk">${item.risk_percentage}% - ${item.risk_level}</div>
+                        `;
+                        historyContainer.appendChild(historyItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading history:', error);
+                    document.getElementById('history-items').innerHTML = '<div class="history-item empty">Error loading history</div>';
+                });
+        }
+        
+        // Load history when page loads
+        document.addEventListener('DOMContentLoaded', loadHistory);
+    </script>
+</body>
+</html>

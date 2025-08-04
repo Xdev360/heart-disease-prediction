@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioRisk.ai - Personal Information</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-bg">
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="sidebar-logo-img"></span>
+                <span class="sidebar-title">CardioRisk.ai</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('start') }}" class="sidebar-link active" id="new-prediction-link"><span class="icon"><img src="{{ url_for('static', filename='img/newprediction.png') }}?v=1" alt="New Prediction" class="nav-icon"></span> New Prediction</a>
+                <a href="#" class="sidebar-link" id="search-result-link"><span class="icon"><img src="{{ url_for('static', filename='img/search.png') }}?v=1" alt="Search" class="nav-icon"></span> Search For Result</a>
+                <a href="#" class="sidebar-link" id="result-library-link"><span class="icon"><img src="{{ url_for('static', filename='img/result.png') }}?v=1" alt="Result Library" class="nav-icon"></span> Result Library</a>
+            </nav>
+            <div class="sidebar-history">
+                <div class="history-title">History</div>
+                <div id="history-items">
+                    <!-- History items will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <button class="toggle-mode" title="Toggle light/dark mode"></button>
+            </div>
+        </aside>
+        <main class="dashboard-main">
+            <div class="main-header">
+                <div class="main-header-content">
+                </div>
+            </div>
+            <div class="main-content-center">
+                <div class="form-card">
+                    <h2 class="form-title">Personal Information</h2>
+                    
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="post" action="{{ url_for('start') }}">
+                        <div class="form-group">
+                            <label for="first_name">First Name</label>
+                            <input type="text" id="first_name" name="first_name" placeholder="Enter first name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name">Last Name</label>
+                            <input type="text" id="last_name" name="last_name" placeholder="Enter last name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" placeholder="Enter age (30-70 years)" min="30" max="70" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary form-btn">Next</button>
+                    </form>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: 20%"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Delete history item function
+        function deleteHistoryItem(id, element) {
+            fetch(`/history/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the element from DOM with animation
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        element.remove();
+                        // Reload history to update the list
+                        loadHistory();
+                    }, 300);
+                } else {
+                    alert('Error deleting history item: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting history item');
+            });
+        }
+        
+        // Load and display prediction history
+        function loadHistory() {
+            console.log('Loading history...');
+            fetch('/history')
+                .then(response => response.json())
+                .then(history => {
+                    console.log('History data received:', history);
+                    const historyContainer = document.getElementById('history-items');
+                    historyContainer.innerHTML = '';
+                    
+                    if (history.length === 0) {
+                        console.log('No history items found');
+                        historyContainer.innerHTML = '<div class="history-item empty">No predictions yet</div>';
+                        return;
+                    }
+                    
+                    // Display last 5 predictions
+                    const recentHistory = history.slice(-5).reverse();
+                    console.log('Recent history to display:', recentHistory);
+                    recentHistory.forEach(item => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        historyItem.innerHTML = `
+                            <div class="history-content">
+                                <div class="history-name">${item.patient_name}</div>
+                                <div class="history-risk">${item.risk_percentage}% - ${item.risk_level}</div>
+                            </div>
+                            <button class="history-delete-btn" data-id="${item.id}">Delete</button>
+                        `;
+                        
+                        // Add delete functionality
+                        const deleteBtn = historyItem.querySelector('.history-delete-btn');
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            if (confirm('Are you sure you want to delete this prediction?')) {
+                                deleteHistoryItem(item.id, historyItem);
+                            }
+                        });
+                        
+                        historyContainer.appendChild(historyItem);
+                    });
+                    console.log('History items added to DOM');
+                })
+                .catch(error => {
+                    console.error('Error loading history:', error);
+                    document.getElementById('history-items').innerHTML = '<div class="history-item empty">Error loading history</div>';
+                });
+        }
+        
+        // Load history when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, checking history container...');
+            const historyContainer = document.getElementById('history-items');
+            console.log('History container found:', historyContainer);
+            loadHistory();
+            
+            // Sidebar navigation functionality
+            const newPredictionLink = document.getElementById('new-prediction-link');
+            const searchResultLink = document.getElementById('search-result-link');
+            const resultLibraryLink = document.getElementById('result-library-link');
+            
+            // New Prediction link - reset form and progress
+            newPredictionLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Clear form data
+                const form = document.querySelector('form');
+                form.reset();
+                
+                // Clear session storage
+                sessionStorage.removeItem('formProgress');
+                sessionStorage.removeItem('formData');
+                
+                // Reset progress bar
+                const progressBar = document.querySelector('.progress-bar');
+                progressBar.style.width = '0%';
+                
+                // Animate progress bar to 20%
+                setTimeout(() => {
+                    progressBar.style.width = '20%';
+                }, 300);
+                
+                // Store new progress
+                setTimeout(() => {
+                    sessionStorage.setItem('formProgress', '20%');
+                }, 1200);
+                
+                // Show success message
+                const flashMessage = document.createElement('div');
+                flashMessage.className = 'alert alert-success';
+                flashMessage.textContent = 'Form reset successfully! You can start a new prediction.';
+                flashMessage.style.marginBottom = '1em';
+                
+                // Remove any existing flash messages
+                const existingAlerts = document.querySelectorAll('.alert');
+                existingAlerts.forEach(alert => alert.remove());
+                
+                // Insert new message before the form
+                form.parentNode.insertBefore(flashMessage, form);
+                
+                // Remove message after 3 seconds
+                setTimeout(() => {
+                    flashMessage.remove();
+                }, 3000);
+            });
+            
+            // Search For Result link
+            searchResultLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Search functionality coming soon!');
+            });
+            
+            // Result Library link
+            resultLibraryLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Result Library functionality coming soon!');
+            });
+            
+            // Age validation
+            const ageInput = document.getElementById('age');
+            const form = document.querySelector('form');
+            const submitBtn = document.querySelector('.form-btn');
+            
+            function validateAge() {
+                const age = parseInt(ageInput.value);
+                if (age < 30) {
+                    ageInput.style.borderColor = '#ff6b6b';
+                    ageInput.style.boxShadow = '0 0 0 2px #ff6b6b33';
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.5';
+                    submitBtn.style.cursor = 'not-allowed';
+                    return false;
+                } else {
+                    ageInput.style.borderColor = '#3a86ff';
+                    ageInput.style.boxShadow = '0 0 0 2px #3a86ff33';
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                    return true;
+                }
+            }
+            
+            // Validate on input change
+            ageInput.addEventListener('input', validateAge);
+            
+            // Validate on form submission
+            form.addEventListener('submit', function(e) {
+                if (!validateAge()) {
+                    e.preventDefault();
+                    alert('Please enter an age of 30 or older for accurate heart disease risk assessment.');
+                    ageInput.focus();
+                }
+            });
+            
+            // Existing progress bar animation code
+            const progressBar = document.querySelector('.progress-bar');
+            const targetWidth = progressBar.style.width;
+            
+            // Check if we're coming from home page (referrer check)
+            const referrer = document.referrer;
+            const isFromHome = referrer.includes(window.location.origin) && 
+                              (referrer.endsWith('/') || referrer.includes('home'));
+            
+            // Get stored progress or start from 0
+            const storedProgress = sessionStorage.getItem('formProgress') || '0%';
+            const currentProgress = parseInt(storedProgress);
+            const targetProgress = parseInt(targetWidth);
+            
+            console.log('Stored progress:', storedProgress, 'Target:', targetWidth);
+            
+            // If we're continuing from a previous page, animate from stored progress
+            if (currentProgress > 0 && currentProgress < targetProgress && !isFromHome) {
+                progressBar.style.width = storedProgress;
+                // Animate to target width from current progress
+                setTimeout(() => {
+                    progressBar.style.width = targetWidth;
+                }, 300);
+            } else {
+                // Start fresh or from home page
+                if (isFromHome) {
+                    sessionStorage.removeItem('formProgress');
+                }
+                progressBar.style.width = '0%';
+                // Animate to target width
+                setTimeout(() => {
+                    progressBar.style.width = targetWidth;
+                }, 300);
+            }
+            
+            // Store the target progress for next page
+            setTimeout(() => {
+                sessionStorage.setItem('formProgress', targetWidth);
+            }, 1200);
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                progressBar.classList.remove('animate-fill');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

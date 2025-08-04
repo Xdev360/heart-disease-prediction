@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioRisk.ai - Medical History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-bg">
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="sidebar-logo-img"></span>
+                <span class="sidebar-title">CardioRisk.ai</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('start') }}" class="sidebar-link" id="new-prediction-link"><span class="icon"><img src="{{ url_for('static', filename='img/newprediction.png') }}" alt="New Prediction" class="nav-icon"></span> New Prediction</a>
+                <a href="#" class="sidebar-link" id="search-result-link"><span class="icon"><img src="{{ url_for('static', filename='img/search.png') }}" alt="Search" class="nav-icon"></span> Search For Result</a>
+                <a href="#" class="sidebar-link" id="result-library-link"><span class="icon"><img src="{{ url_for('static', filename='img/result.png') }}" alt="Result Library" class="nav-icon"></span> Result Library</a>
+            </nav>
+            <div class="sidebar-history">
+                <div class="history-title">History</div>
+                <div id="history-items">
+                    <!-- History items will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <button class="toggle-mode" title="Toggle light/dark mode"></button>
+            </div>
+        </aside>
+        <main class="dashboard-main">
+            <div class="main-header">
+                <div class="main-header-content">
+                </div>
+            </div>
+            <div class="main-content-center">
+                <div class="form-card">
+                    <h2 class="form-title">Medical History</h2>
+                    <form method="post" action="{{ url_for('medical') }}">
+                        <div class="form-group">
+                            <label for="bp_meds">Blood Pressure Medication</label>
+                            <select id="bp_meds" name="bp_meds" required>
+                                <option value="">Select BP medication status</option>
+                                <option value="yes">Yes - Taking medication</option>
+                                <option value="no">No - Not taking medication</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="smoke_history">History Of Smoking</label>
+                            <select id="smoke_history" name="smoke_history" required>
+                                <option value="">Select smoking history</option>
+                                <option value="yes">Yes - Have smoked before</option>
+                                <option value="no">No - Never smoked</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="hypertension">Hypertension (High Blood Pressure)</label>
+                            <select id="hypertension" name="hypertension" required>
+                                <option value="">Select hypertension status</option>
+                                <option value="yes">Yes - Have hypertension</option>
+                                <option value="no">No - Normal blood pressure</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="diabetes">Diabetes</label>
+                            <select id="diabetes" name="diabetes" required>
+                                <option value="">Select diabetes status</option>
+                                <option value="yes">Yes - Have diabetes</option>
+                                <option value="no">No - No diabetes</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary form-btn">Next</button>
+                    </form>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: 40%"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Delete history item function
+        function deleteHistoryItem(id, element) {
+            fetch(`/history/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the element from DOM with animation
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        element.remove();
+                        // Reload history to update the list
+                        loadHistory();
+                    }, 300);
+                } else {
+                    alert('Error deleting history item: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting history item');
+            });
+        }
+        
+        // Load and display prediction history
+        function loadHistory() {
+            fetch('/history')
+                .then(response => response.json())
+                .then(history => {
+                    const historyContainer = document.getElementById('history-items');
+                    historyContainer.innerHTML = '';
+                    
+                    if (history.length === 0) {
+                        historyContainer.innerHTML = '<div class="history-item empty">No predictions yet</div>';
+                        return;
+                    }
+                    
+                    // Display last 5 predictions
+                    const recentHistory = history.slice(-5).reverse();
+                    recentHistory.forEach(item => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        historyItem.innerHTML = `
+                            <div class="history-content">
+                                <div class="history-name">${item.patient_name}</div>
+                                <div class="history-risk">${item.risk_percentage}% - ${item.risk_level}</div>
+                            </div>
+                            <button class="history-delete-btn" data-id="${item.id}">Delete</button>
+                        `;
+                        
+                        // Add delete functionality
+                        const deleteBtn = historyItem.querySelector('.history-delete-btn');
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            if (confirm('Are you sure you want to delete this prediction?')) {
+                                deleteHistoryItem(item.id, historyItem);
+                            }
+                        });
+                        
+                        historyContainer.appendChild(historyItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading history:', error);
+                    document.getElementById('history-items').innerHTML = '<div class="history-item empty">Error loading history</div>';
+                });
+        }
+        
+        // Load history when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+            
+
+            
+            // Sidebar navigation functionality
+            const newPredictionLink = document.getElementById('new-prediction-link');
+            const searchResultLink = document.getElementById('search-result-link');
+            const resultLibraryLink = document.getElementById('result-library-link');
+            
+            // New Prediction link - redirect to start page
+            newPredictionLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Clear session storage
+                sessionStorage.removeItem('formProgress');
+                sessionStorage.removeItem('formData');
+                
+                // Redirect to start page
+                window.location.href = "{{ url_for('start') }}";
+            });
+            
+            // Search For Result link
+            searchResultLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Search functionality coming soon!');
+            });
+            
+            // Result Library link
+            resultLibraryLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Result Library functionality coming soon!');
+            });
+            
+            // Existing progress bar animation code
+            const progressBar = document.querySelector('.progress-bar');
+            const targetWidth = progressBar.style.width;
+            
+            // Get stored progress or start from 0
+            const storedProgress = sessionStorage.getItem('formProgress') || '0%';
+            const currentProgress = parseInt(storedProgress);
+            const targetProgress = parseInt(targetWidth);
+            
+            console.log('Stored progress:', storedProgress, 'Target:', targetWidth);
+            
+            // If we're continuing from a previous page, animate from stored progress
+            if (currentProgress > 0 && currentProgress < targetProgress) {
+                progressBar.style.width = storedProgress;
+                // Animate to target width from current progress
+                setTimeout(() => {
+                    progressBar.style.width = targetWidth;
+                }, 300);
+            } else {
+                // Start fresh
+                progressBar.style.width = '0%';
+                // Animate to target width
+                setTimeout(() => {
+                    progressBar.style.width = targetWidth;
+                }, 300);
+            }
+            
+            // Store the target progress for next page
+            setTimeout(() => {
+                sessionStorage.setItem('formProgress', targetWidth);
+            }, 1200);
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                progressBar.classList.remove('animate-fill');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

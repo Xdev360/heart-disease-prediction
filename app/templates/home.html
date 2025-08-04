@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioRisk.ai</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <img src="{{ url_for('static', filename='img/blueglow.png') }}" alt="Blue Glow" class="blue-glow-bg">
+    <header>
+        <div class="logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo-img"> CardioRisk.ai</div>
+        <nav class="navbar">
+            <a href="#" class="active">Home</a>
+            <a href="#">About</a>
+            <a href="#">How to Use</a>
+            <a href="#">DOC</a>
+        </nav>
+        <div class="top-buttons">
+            <button class="glass-btn">Download Project Doc</button>
+            <button class="theme-toggle"><img src="{{ url_for('static', filename='img/lightmode.png') }}" alt="Light Mode" class="theme-icon"></button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="badge">⚕️ Kwasu Final Year Project</div>
+        <h1><span class="welcome-medium">Welcome To</span> <span class="highlight">CardioRisk.ai</span></h1>
+        <p class="subtitle-regular">Your intelligent partner in predicting heart disease risk using advanced AI.</p>
+        <div class="hero-buttons">
+            <button class="glass-btn">Download Project Doc</button>
+            <a href="{{ url_for('start') }}" class="blue-btn">Use AI</a>
+        </div>
+
+        <div class="arc-graphic">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </section>
+    <img src="{{ url_for('static', filename='img/arc-bg.png') }}" alt="Decorative Arc" class="arc-image-bg">
+    
+    <script>
+        // Reset progress bar when starting a new prediction
+        document.addEventListener('DOMContentLoaded', function() {
+            // Clear any existing progress when landing on home page
+            sessionStorage.removeItem('formProgress');
+            console.log('Progress cleared on home page');
+            
+            const useAiButton = document.querySelector('.blue-btn');
+            if (useAiButton) {
+                useAiButton.addEventListener('click', function() {
+                    // Clear stored progress to start fresh
+                    sessionStorage.removeItem('formProgress');
+                    console.log('Progress cleared for new prediction');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
